@@ -35,6 +35,8 @@
               // Отдельный массив для хранение всего аудио и видео контента, который будет 
               // запущен по нажатию на экран смартфона
               var audioContent = [];
+
+              let controller;
       
               // Инициализируем сцену и запускаем цикл анимации
               initialize();
@@ -222,15 +224,13 @@
                             markerRoots[i].add(mesh2);
                             break;
                         case 'controller':
-                            let controller = new THREE.Mesh(
-                                new THREE.ConeGeometry(0.15, 10, 32),
+                            controller = new THREE.Mesh(
+                                new THREE.CubeGeometry(10, 0.15, 0.15),
                                 new THREE.MeshBasicMaterial({ color: 'green' })
                             );
-                            controller.rotation.set(0, 0, 0);
-                            controller.position.set(0, 0, 0)
-                            // controller.rotation.y = Math.PI / 2;
-                            // controller.position.y = 0.125;
-                            // controller.position.z = -4.5;
+                            controller.rotation.y = Math.PI / 2;
+                            controller.position.y = 0.125;
+                            controller.position.z = -4.5;
                             markerRoots[i].add(controller);
                             break;
                         default:
@@ -271,12 +271,12 @@
 
             function checkController() {
                 mainContainer.traverse((object) => {
-                if (object.isMesh) {
-                    // if (object.layers.mask === 4) {
-                    // object.layers.set(0);
-                    // } else if (object.layers.mask === 1) {
-                    // object.layers.set(2);
-                    // }
+                if (object.isMesh && object !== controller) {
+                    if (detectCollisionCubes(object, controller)) {
+                        object.material.color.set('red')
+                    } else {
+                        object.material.color.set('white')
+                    }
                 }
                 });
             }
