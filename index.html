@@ -120,7 +120,7 @@
                   // если вместо баркода был добавлен .patt, на его место в массив добавляется -1
                   const patternBarcode = [-1 ,-1 ,25 ,-1, -1];
                   // Массив типов контента для каждого маркера, заполняется значиями: изображение, модель, видео
-                  const modes = ["video" ,"image" ,"model" ,"image", "controller"];
+                  const modes = ["video" ,"image" ,"model" ,"", "controller"];
                   // Массив файлов моделей, если нет модели будет добавлена пустая строка
                   const modelFiles = ["" ,"" ,"Butterfly" ,"",""];
                   // Массив файлов изображений, если нет изображения будет добавлена пустая строка
@@ -237,7 +237,7 @@
                             // Если никакого контента добавленно не было, добавляем обычный красный куб 1х1х1
                             let mesh = new THREE.Mesh(
                                 new THREE.CubeGeometry(1, 1, 1),
-                                new THREE.MeshBasicMaterial({ color: 'red', transparent: true, opacity: 0.5 })
+                                new THREE.MeshBasicMaterial({ color: 'blue', transparent: true, opacity: 0.5 })
                             );
                             mesh.position.y = 0.5;
                             markerRoots[i].add(mesh);
