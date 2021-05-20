@@ -121,31 +121,31 @@
                   
                   // Массив имён файлов .patt. Массив заполняется в порядке добавления маркеров
                   // если вместо .patt был добавлен баркод, на его место в массив добавляется пустая строка
-                  const patternNames = ["pattern-qrcode.png" ,"" ,"pattern-LS.patt" ,"" ,"pattern-inner-kanji.patt" ,"pattern-hiro.patt"];
+                  const patternNames = ["pattern-qrcode.patt" ,"" ,"pattern-inner-kanji.patt" ,"" ,"pattern-LS.patt"];
                   // Maссив баркодов, заполняется одновременно с массивом паттернов
                   // если вместо баркода был добавлен .patt, на его место в массив добавляется -1
-                  const patternBarcode = [-1 ,16 ,-1 ,25 ,-1 ,-1];
+                  const patternBarcode = [-1 ,25 ,-1 ,16 ,-1];
                   // Массив типов контента для каждого маркера, заполняется значиями: изображение, модель, видео
-                  const modes = ["image" ,"model" ,"image" ,"video" ,"image" ,"image"];
+                  const modes = ["image" ,"model" ,"image" ,"image" ,"video"];
                   // Массив файлов моделей, если нет модели будет добавлена пустая строка
-                  const modelFiles = ["" ,"Butterfly" ,"" ,"" ,"" ,""];
+                  const modelFiles = ["" ,"Butterfly" ,"" ,"" ,""];
                   // Массив файлов изображений, если нет изображения будет добавлена пустая строка
-                  const imageFiles = ["pattern-controller.png" ,"" ,"mountain.png" ,"" ,"forest.jpg" ,"Melitaea_britomartis_sf.1001.jpg"];
+                  const imageFiles = ["forest.jpg" ,"" ,"Melitaea_britomartis_sf.1001.jpg" ,"mountain.png" ,""];
                   // Массив файлов видео, если нет видео будет добавлена пустая строка
-                  const videoFiles = ["" ,"" ,"" ,"sintel.mp4" ,"" ,""];
+                  const videoFiles = ["" ,"" ,"" ,"" ,"sintel.mp4"];
                   // Массив файлов аудио, если нет аудио будет добавлена пустая строка
-                  const audioFiles = ["melody_1.mp3" ,"Superlife.mp3" ,"Switchblade.mp3" ,"" ,"Too Alive.mp3" ,"Tuyo.mp3"];
+                  const audioFiles = ["Superlife.mp3" ,"Switchblade.mp3" ,"Too Alive.mp3" ,"Tuyo.mp3" ,""];
                   // Массив опций повтора аудио и видео контента, по дефолту для всех будет false
-                  const repeatOptions = ["true" ,"true" ,"true" ,"true" ,"true" ,"true"];
+                  const repeatOptions = ["true" ,"true" ,"true" ,"true" ,"true"];
   
                   // Создаём массив для всех маркеров
                   const markerRoots = [];
-                  for (let i = 0; i < 6; i++) {
+                  for (let i = 0; i < 5; i++) {
                         markerRoots[i] = new THREE.Group();
                   }
   
                   // Проходимся по каждому маркеру из массива и добавляем его в главный контейнер 
-                  for (let i = 0; i < 6; i++) {
+                  for (let i = 0; i < 5; i++) {
                     mainContainer.add(markerRoots[i]);
 
                     // Если текущий маркер это баркод, создаём AR контроллер под баркод
@@ -282,16 +282,17 @@
             }
 
             function checkController() {
-                if (!controller) return;
-                mainContainer.traverse((object) => {
-                if (object.isMesh && object !== controller) {
-                    if (detectCollisionCubes(object, controller)) {
-                        object.material.color.set('red')
-                    } else {
-                        object.material.color.set('white')
-                    }
+                if (controller) {
+                    mainContainer.traverse((object) => {
+                        if (object.isMesh && object !== controller) {
+                            if (detectCollisionCubes(object, controller)) {
+                                object.material.color.set('red')
+                            } else {
+                                object.material.color.set('white')
+                            }
+                        }
+                    });
                 }
-                });
             }
 
             function detectCollisionCubes (object1, object2) {
