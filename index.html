@@ -35,7 +35,7 @@
               // Отдельный массив для хранение всего аудио и видео контента, который будет 
               // запущен по нажатию на экран смартфона
               var audioContent = [];
-
+      
               let audioInitialized = false;
               let barcodesSound = new Map();
               let patternsSound = new Map();
@@ -43,7 +43,7 @@
               let patternsID = [];
 
               let controller;
-      
+
               // Инициализируем сцену и запускаем цикл анимации
               initialize();
               animate();
@@ -121,22 +121,22 @@
                   
                   // Массив имён файлов .patt. Массив заполняется в порядке добавления маркеров
                   // если вместо .patt был добавлен баркод, на его место в массив добавляется пустая строка
-                  const patternNames = ["pattern-LS.patt" ,"pattern-inner-kanji.patt" ,"" ,"pattern-qrcode.patt", "pattern-controller.patt"];
+                  const patternNames = ["pattern-LS.patt" ,"" ,"pattern-inner-kanji.patt" ,"" ,"pattern-controller.patt"];
                   // Maссив баркодов, заполняется одновременно с массивом паттернов
                   // если вместо баркода был добавлен .patt, на его место в массив добавляется -1
-                  const patternBarcode = [-1 ,-1 ,25 ,-1, -1];
+                  const patternBarcode = [-1 ,25 ,-1 ,16 ,-1];
                   // Массив типов контента для каждого маркера, заполняется значиями: изображение, модель, видео
-                  const modes = ["video" ,"" ,"model" ,"image", "controller"];
+                  const modes = ["image" ,"model" ,"video" ,"image" ,"controller"];
                   // Массив файлов моделей, если нет модели будет добавлена пустая строка
-                  const modelFiles = ["" ,"" ,"Butterfly" ,"",""];
+                  const modelFiles = ["" ,"Butterfly" ,"" ,"" ,""];
                   // Массив файлов изображений, если нет изображения будет добавлена пустая строка
-                  const imageFiles = ["" ,"forest.jpg" ,"" ,"mountain.png",""];
+                  const imageFiles = ["mountain.png" ,"" ,"" ,"forest.jpg" ,""];
                   // Массив файлов видео, если нет видео будет добавлена пустая строка
-                  const videoFiles = ["sintel.mp4" ,"" ,"" ,"",""];
+                  const videoFiles = ["" ,"" ,"sintel.mp4" ,"" ,""];
                   // Массив файлов аудио, если нет аудио будет добавлена пустая строка
-                  const audioFiles = ["" ,"Superlife.mp3" ,"Switchblade.mp3" ,"Too Alive.mp3","Tuyo.mp3"];
+                  const audioFiles = ["Switchblade.mp3" ,"Superlife.mp3" ,"" ,"Too Alive.mp3" ,"Tuyo.mp3"];
                   // Массив опций повтора аудио и видео контента, по дефолту для всех будет false
-                  const repeatOptions = ["true" ,"true" ,"true" ,"true","true"];
+                  const repeatOptions = ["true" ,"true" ,"true" ,"true" ,"true"];
   
                   // Создаём массив для всех маркеров
                   const markerRoots = [];
@@ -218,11 +218,6 @@
                             }
                             // Добавляем видео в массив аудио контента
                             // audioContent.push(video);
-                            // if (patternBarcode[i] === -1) {
-                            //     patternsSound.set(patternsID.length - 1, video);
-                            // } else {
-                            //     barcodesSound.set(patternBarcode[i], video);
-                            // }
                             // Перенаправляем текстуру из видео в материал для плоскости
                             let texture2 = new THREE.VideoTexture(video);
                             texture2.minFilter = THREE.LinearFilter;
@@ -248,10 +243,10 @@
                         default:
                             // Если никакого контента добавленно не было, добавляем обычный красный куб 1х1х1
                             let mesh = new THREE.Mesh(
-                                new THREE.CubeGeometry(2, 2, 2),
-                                new THREE.MeshBasicMaterial({ color: 'white', transparent: false, opacity: 0.5 })
+                                new THREE.CubeGeometry(1, 1, 1),
+                                new THREE.MeshBasicMaterial({ color: 'red', transparent: true, opacity: 0.5 })
                             );
-                            mesh.position.y = 1;
+                            mesh.position.y = 0.5;
                             markerRoots[i].add(mesh);
                             break;
                     }
@@ -273,12 +268,12 @@
                             }
                             // Уменьшаем громкость в 2 раза
                             sound.setVolume(0.5);
+                            if (patternBarcode[i] === -1) {
+                                patternsSound.set(patternsID.length - 1, sound);
+                            } else {
+                                barcodesSound.set(patternBarcode[i], sound);
+                            }
                         });
-                        if (patternBarcode[i] === -1) {
-                            patternsSound.set(patternsID.length - 1, sound);
-                        } else {
-                            barcodesSound.set(patternBarcode[i], sound);
-                        }
                     }
                 }
     
