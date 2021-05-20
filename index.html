@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+Прочитати повну документацію, та завантажити файли бібліотек можна за цим посиланням.
+
+UA
+Згенерований код для вашої програми:
+
+
+      <!DOCTYPE html>
   
       <head>
           <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
@@ -121,31 +127,31 @@
                   
                   // Массив имён файлов .patt. Массив заполняется в порядке добавления маркеров
                   // если вместо .patt был добавлен баркод, на его место в массив добавляется пустая строка
-                  const patternNames = ["pattern-LS.patt" ,"" ,"pattern-inner-kanji.patt" ,"" ,"pattern-controller.patt"];
+                  const patternNames = ["pattern-qrcode.png" ,"" ,"pattern-LS.patt" ,"" ,"pattern-inner-kanji.patt" ,"pattern-hiro.patt"];
                   // Maссив баркодов, заполняется одновременно с массивом паттернов
                   // если вместо баркода был добавлен .patt, на его место в массив добавляется -1
-                  const patternBarcode = [-1 ,25 ,-1 ,16 ,-1];
+                  const patternBarcode = [-1 ,16 ,-1 ,25 ,-1 ,-1];
                   // Массив типов контента для каждого маркера, заполняется значиями: изображение, модель, видео
-                  const modes = ["image" ,"model" ,"video" ,"image" ,"controller"];
+                  const modes = ["image" ,"model" ,"image" ,"video" ,"image" ,"image"];
                   // Массив файлов моделей, если нет модели будет добавлена пустая строка
-                  const modelFiles = ["" ,"Butterfly" ,"" ,"" ,""];
+                  const modelFiles = ["" ,"Butterfly" ,"" ,"" ,"" ,""];
                   // Массив файлов изображений, если нет изображения будет добавлена пустая строка
-                  const imageFiles = ["mountain.png" ,"" ,"" ,"forest.jpg" ,""];
+                  const imageFiles = ["pattern-controller.png" ,"" ,"mountain.png" ,"" ,"forest.jpg" ,"Melitaea_britomartis_sf.1001.jpg"];
                   // Массив файлов видео, если нет видео будет добавлена пустая строка
-                  const videoFiles = ["" ,"" ,"sintel.mp4" ,"" ,""];
+                  const videoFiles = ["" ,"" ,"" ,"sintel.mp4" ,"" ,""];
                   // Массив файлов аудио, если нет аудио будет добавлена пустая строка
-                  const audioFiles = ["Switchblade.mp3" ,"Superlife.mp3" ,"" ,"Too Alive.mp3" ,"Tuyo.mp3"];
+                  const audioFiles = ["melody_1.mp3" ,"Superlife.mp3" ,"Switchblade.mp3" ,"" ,"Too Alive.mp3" ,"Tuyo.mp3"];
                   // Массив опций повтора аудио и видео контента, по дефолту для всех будет false
-                  const repeatOptions = ["true" ,"true" ,"true" ,"true" ,"true"];
+                  const repeatOptions = ["true" ,"true" ,"true" ,"true" ,"true" ,"true"];
   
                   // Создаём массив для всех маркеров
                   const markerRoots = [];
-                  for (let i = 0; i < 5; i++) {
+                  for (let i = 0; i < 6; i++) {
                         markerRoots[i] = new THREE.Group();
                   }
   
                   // Проходимся по каждому маркеру из массива и добавляем его в главный контейнер 
-                  for (let i = 0; i < 5; i++) {
+                  for (let i = 0; i < 6; i++) {
                     mainContainer.add(markerRoots[i]);
 
                     // Если текущий маркер это баркод, создаём AR контроллер под баркод
@@ -217,7 +223,7 @@
                                 })
                             }
                             // Добавляем видео в массив аудио контента
-                            // audioContent.push(video);
+                            //audioContent.push(video);
                             // Перенаправляем текстуру из видео в материал для плоскости
                             let texture2 = new THREE.VideoTexture(video);
                             texture2.minFilter = THREE.LinearFilter;
@@ -368,3 +374,4 @@
     </body>
     
     </html>
+  
