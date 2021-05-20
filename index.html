@@ -36,6 +36,12 @@
               // запущен по нажатию на экран смартфона
               var audioContent = [];
 
+              let audioInitialized = false;
+              let barcodesSound = new Map();
+              let patternsSound = new Map();
+              let barcodesID = [];
+              let patternsID = [];
+
               let controller;
       
               // Инициализируем сцену и запускаем цикл анимации
@@ -128,9 +134,9 @@
                   // Массив файлов видео, если нет видео будет добавлена пустая строка
                   const videoFiles = ["sintel.mp4" ,"" ,"" ,"",""];
                   // Массив файлов аудио, если нет аудио будет добавлена пустая строка
-                  const audioFiles = ["" ,"" ,"" ,"",""];
+                  const audioFiles = ["" ,"Superlife.mp3" ,"Switchblade.mp3" ,"Too Alive.mp3","Tuyo.mp3"];
                   // Массив опций повтора аудио и видео контента, по дефолту для всех будет false
-                  const repeatOptions = ["true" ,"false" ,"false" ,"false","false"];
+                  const repeatOptions = ["true" ,"true" ,"true" ,"true","true"];
   
                   // Создаём массив для всех маркеров
                   const markerRoots = [];
@@ -148,12 +154,13 @@
                         let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerRoots[i], {
                             type: 'pattern', patternUrl: patternNames[i],
                         })
+                        patternsID.push(patternNames[i]);
                     } else {
                         let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerRoots[i], {
                             type: "barcode", barcodeValue: patternBarcode[i],
                         })
+                        barcodesID.push(patternBarcode[i]);
                     }
-                            console.log(modes[i])
     
                     // Используем switch для работы с каждым отдельным случаем контента
                     switch (modes[i]) {
@@ -210,7 +217,12 @@
                                 })
                             }
                             // Добавляем видео в массив аудио контента
-                            audioContent.push(video);
+                            // audioContent.push(video);
+                            // if (patternBarcode[i] === -1) {
+                            //     patternsSound.set(patternsID.length - 1, video);
+                            // } else {
+                            //     barcodesSound.set(patternBarcode[i], video);
+                            // }
                             // Перенаправляем текстуру из видео в материал для плоскости
                             let texture2 = new THREE.VideoTexture(video);
                             texture2.minFilter = THREE.LinearFilter;
@@ -262,6 +274,11 @@
                             // Уменьшаем громкость в 2 раза
                             sound.setVolume(0.5);
                         });
+                        if (patternBarcode[i] === -1) {
+                            patternsSound.set(patternsID.length - 1, sound);
+                        } else {
+                            barcodesSound.set(patternBarcode[i], sound);
+                        }
                     }
                 }
     
@@ -300,6 +317,24 @@
             function update() {
                 if (arToolkitSource.ready !== false) {
                     arToolkitContext.update(arToolkitSource.domElement);
+                    if (audioInitialized) {
+                        barcodesID.forEach((elem, index) => {
+                            const sound = barcodesSound.get(elem);
+                            if (arToolkitContext.arController.barcodeMarkers[elem].inCurrent && sound) {
+                                sound.play();
+                            } else if (!arToolkitContext.arController.barcodeMarkers[elem].inCurrent && sound) {
+                                sound.pause();
+                            }
+                        })
+                        patternsID.forEach((elem, index) => {
+                            const sound = patternsSound.get(index);
+                            if (arToolkitContext.arController.patternMarkers[index].inCurrent && sound) {
+                                sound.play();
+                            } else if (!arToolkitContext.arController.patternMarkers[index].inCurrent && sound) {
+                                sound.pause();
+                            }
+                        })
+                    }
                 }
             }
     
@@ -327,6 +362,7 @@
                 for (let i = 0; i < audioContent.length; i++) {
                     audioContent[i].play();
                 }
+                audioInitialized = true;
             };
             // Вызываем функцию по нажатию на экран
             window.addEventListener('touchstart', playAudioContent)
