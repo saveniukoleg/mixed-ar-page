@@ -154,10 +154,12 @@
                         let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerRoots[i], {
                             type: 'pattern', patternUrl: patternNames[i],
                         })
+                        patternsID.push(patternNames[i]);
                     } else {
                         let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerRoots[i], {
                             type: "barcode", barcodeValue: patternBarcode[i],
                         })
+                        barcodesID.push(patternBarcode[i]);
                     }
     
                     // Используем switch для работы с каждым отдельным случаем контента
