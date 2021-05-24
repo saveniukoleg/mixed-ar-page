@@ -266,13 +266,16 @@
                                 sound.setLoop(true);
                             }
                             if (patternBarcode[i] === -1) {
-                                patternsSound.set(i, sound);
+                                patternsSound.set(patternNames[i], sound);
                             } else {
                                 barcodesSound.set(patternBarcode[i], sound);
                             }
                         });
                     }
                 }
+                console.log(patternsID)
+                console.log(patternsSound)
+                console.log(barcodesSound)
     
                 // Добавляем главный контейнер на сцену
                 scene.add(mainContainer);
@@ -319,17 +322,17 @@
                                     if (sound && !sound.isPlaying) sound.play();
                                 } else {
                                     let sound = barcodesSound.get(elem);
-                                    if (sound && sound.isPlaying) sound.pause();
+                                    if (sound && sound.isPlaying) sound.stop();
                                 }
                             })
                         }
                         if (patternsID.length) {
                             for (let index = 0; index < patternsID.length; index++) {
                                 if (arToolkitContext.arController.patternMarkers[index].inCurrent) {
-                                    let sound = patternsSound.get(index);
+                                    let sound = patternsSound.get(patternsID[index]);
                                     if (sound && !sound.isPlaying) sound.play();
                                 } else {
-                                    let sound = patternsSound.get(index);
+                                    let sound = patternsSound.get(patternsID[index]);
                                     if (sound && sound.isPlaying) sound.stop();
                                 }
                             }
