@@ -61,6 +61,9 @@
                   // Добавляем камеру, которая будет позже переназначена на камеру смартфона
                   camera = new THREE.Camera();
                   scene.add(camera);
+                  const listener = new THREE.AudioListener();
+                  camera.add(listener);
+                  const audioLoader = new THREE.AudioLoader();
       
                   // Объявляем стандартный рендерер и добавляем его в тег body html документа
                   renderer = new THREE.WebGLRenderer({
@@ -253,23 +256,17 @@
     
                     // Если имеются аудио файлы настраиваем их и добавляем в массив аудио контента
                     if (audioFiles[i]) {
-                        const listener = new THREE.AudioListener();
-                        camera.add(listener);
-                        // Создаём глобальный аудио источник
-                        const sound = new THREE.Audio(listener);
-                        audioContent.push(sound);
-                        // Загружаем аудио и добавляем его в буфер
-                        const audioLoader = new THREE.AudioLoader();
-                        audioLoader.load(`${audioFiles[i]}`, function (buffer) {
+                        audioLoader.load(`${audioFiles[i]}`, (buffer) => {
+                            // Создаём глобальный аудио источник
+                            let sound = new THREE.Audio(listener);
+                            sound.name = `${audioFiles[i]}`;
                             sound.setBuffer(buffer);
                             // Устанавлием аудио на автоповтор в зависимости от значения в массиве
                             if (repeatOptions[i]) {
                                 sound.setLoop(true);
                             }
-                            // Уменьшаем громкость в 2 раза
-                            sound.setVolume(0.5);
                             if (patternBarcode[i] === -1) {
-                                patternsSound.set(patternsID.length - 1, sound);
+                                patternsSound.set(i, sound);
                             } else {
                                 barcodesSound.set(patternBarcode[i], sound);
                             }
@@ -315,22 +312,28 @@
                 if (arToolkitSource.ready !== false) {
                     arToolkitContext.update(arToolkitSource.domElement);
                     if (audioInitialized) {
-                        barcodesID.forEach((elem, index) => {
-                            const sound = barcodesSound.get(elem);
-                            if (arToolkitContext.arController.barcodeMarkers[elem].inCurrent && sound) {
-                                sound.play();
-                            } else if (!arToolkitContext.arController.barcodeMarkers[elem].inCurrent && sound) {
-                                sound.pause();
+                        if (barcodesID.length) {
+                            barcodesID.forEach((elem, index) => {
+                                if (arToolkitContext.arController.barcodeMarkers[elem].inCurrent) {
+                                    let sound = barcodesSound.get(elem);
+                                    if (sound && !sound.isPlaying) sound.play();
+                                } else {
+                                    let sound = barcodesSound.get(elem);
+                                    if (sound && sound.isPlaying) sound.pause();
+                                }
+                            })
+                        }
+                        if (patternsID.length) {
+                            for (let index = 0; index < patternsID.length; index++) {
+                                if (arToolkitContext.arController.patternMarkers[index].inCurrent) {
+                                    let sound = patternsSound.get(index);
+                                    if (sound && !sound.isPlaying) sound.play();
+                                } else {
+                                    let sound = patternsSound.get(index);
+                                    if (sound && sound.isPlaying) sound.stop();
+                                }
                             }
-                        })
-                        patternsID.forEach((elem, index) => {
-                            const sound = patternsSound.get(index);
-                            if (arToolkitContext.arController.patternMarkers[index].inCurrent && sound) {
-                                sound.play();
-                            } else if (!arToolkitContext.arController.patternMarkers[index].inCurrent && sound) {
-                                sound.pause();
-                            }
-                        })
+                        }
                     }
                 }
             }
@@ -355,10 +358,6 @@
             const playAudioContent = () => {
                 // Убираем ивент с функции, чтобы она не вызвалась при последующих нажатиях
                 window.removeEventListener('touchstart', playAudioContent);
-                // Проходимся по массиву аудио контента и запускаем каждый контент
-                for (let i = 0; i < audioContent.length; i++) {
-                    audioContent[i].play();
-                }
                 audioInitialized = true;
             };
             // Вызываем функцию по нажатию на экран
