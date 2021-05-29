@@ -64,6 +64,7 @@
                   const listener = new THREE.AudioListener();
                   camera.add(listener);
                   const audioLoader = new THREE.AudioLoader();
+                  const fontLoader = new THREE.FontLoader();
       
                   // Объявляем стандартный рендерер и добавляем его в тег body html документа
                   renderer = new THREE.WebGLRenderer({
@@ -122,6 +123,7 @@
                   // Создаём главную группу для всех 3D объектов
                   mainContainer = new THREE.Group();
                   
+                  const plainTexts = ['', '', 'Oleg Saveniuk\n      NAI-185', '']
                   // Массив имён файлов .patt. Массив заполняется в порядке добавления маркеров
                   // если вместо .patt был добавлен баркод, на его место в массив добавляется пустая строка
                   const patternNames = ["pattern-LS.patt" ,"pattern-inner-kanji.patt" ,"" ,"pattern-qrcode.patt"];
@@ -129,7 +131,7 @@
                   // если вместо баркода был добавлен .patt, на его место в массив добавляется -1
                   const patternBarcode = [-1 ,-1 ,25 ,-1];
                   // Массив типов контента для каждого маркера, заполняется значиями: изображение, модель, видео
-                  const modes = ["video" ,"image" ,"model" ,""];
+                  const modes = ["video" ,"image" ,"text" ,""];
                   // Массив файлов моделей, если нет модели будет добавлена пустая строка
                   const modelFiles = ["" ,"" ,"Butterfly" ,""];
                   // Массив файлов изображений, если нет изображения будет добавлена пустая строка
@@ -238,6 +240,39 @@
                             mesh2.rotation.x = -Math.PI / 2;
                             // Добавляем плоскость в контейнер
                             markerRoots[i].add(mesh2);
+                            break;
+                        case 'text':
+                            fontLoader.load(
+                                "./fonts/SF_Pro_Text_Semibold.typeface.json",
+                                (response) => {
+                                    const font = response;
+                                    const textGeometry = new THREE.TextGeometry(plainTexts[i], {
+                                        font: font,
+                                        size: 0.5,
+                                        height: 0.05,
+                                        curveSegments: 30,
+                                        bevelThickness: 0.04,
+                                        bevelSize: 0.02,
+                                        bevelEnabled: true
+                                    });
+                                    textGeometry.computeBoundingBox();
+
+                                    const textMesh = new THREE.Mesh(
+                                        textGeometry,
+                                        new THREE.MeshPhongMaterial({color: '#ff0000'})
+                                    );
+
+                                    const centerOffset =
+                                        -0.5 *
+                                        (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x);
+                                    textMesh.position.x = centerOffset;
+                                    textMesh.position.y = 0.4;
+                                    textMesh.position.z = -0.25;
+                                    textMesh.rotation.x = -Math.PI / 2;
+
+                                    markerRoots[i].add(textMesh);
+                                }
+                            );
                             break;
                         case 'controller':
                             controller = new THREE.Mesh(
