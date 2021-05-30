@@ -36,6 +36,8 @@
               // запущен по нажатию на экран смартфона
               var audioContent = [];
       
+              let barcodeStates = [];
+              let patternStates = [];
               let audioInitialized = false;
               let barcodesSound = new Map();
               let patternsSound = new Map();
@@ -314,6 +316,10 @@
                         });
                     }
                 }
+
+                patternStates = patternsID.map(() => false);
+                barcodeStates = barcodesID.map(() => false);
+
     
                 // Добавляем главный контейнер на сцену
                 scene.add(mainContainer);
@@ -353,33 +359,64 @@
                 if (arToolkitSource.ready !== false) {
                     arToolkitContext.update(arToolkitSource.domElement);
                     if (audioInitialized) {
-                        if (barcodesID.length) {
-                            barcodesID.forEach((elem, index) => {
-                                if (arToolkitContext.arController.barcodeMarkers[elem].inCurrent) {
-                                    let sound = barcodesSound.get(elem);
-                                    if (sound && !sound.isPlaying) sound.play();
-                                } else {
-                                    let sound = barcodesSound.get(elem);
-                                    if (sound.nodeName === 'VIDEO') {
-                                        if (!sound.paused) sound.pause()
+                        if (barcodeStates.length) {
+                            for (let i = 0; i < barcodeStates.length; i++) {
+                                if (barcodeStates[i] !== arToolkitContext.arController.barcodeMarkers[barcodesID[i]].inCurrent) {
+                                    barcodeStates[i] = !barcodeStates[i];
+                                    let sound = barcodesSound.get(barcodesID[i]);
+                                    if (barcodeStates[i]) {
+                                        if (sound && !sound.isPlaying) sound.play(); 
+                                        console.log('barcode play')
+                                    } else {
+                                        if (sound.nodeName === 'VIDEO') {
+                                            if (!sound.paused) sound.pause()
+                                        }
+                                        if (sound && sound.isPlaying) sound.stop();
+                                        console.log('barcode pause')
                                     }
-                                    if (sound && sound.isPlaying) sound.stop();
-                                }
-                            })
-                        }
-                        if (patternsID.length) {
-                            for (let index = 0; index < patternsID.length; index++) {
-                                if (arToolkitContext.arController.patternMarkers[index].inCurrent) {
-                                    let sound = patternsSound.get(patternsID[index]);
-                                    if (sound && !sound.isPlaying) sound.play();
-                                } else {
-                                    let sound = patternsSound.get(patternsID[index]);
-                                    if (sound.nodeName === 'VIDEO') {
-                                        if (!sound.paused) sound.pause()
-                                    }
-                                    if (sound && sound.isPlaying) sound.stop();
                                 }
                             }
+
+
+
+
+
+                            // barcodesID.forEach((elem, index) => {
+                            //     if (arToolkitContext.arController.barcodeMarkers[elem].inCurrent) {
+                            //         let sound = barcodesSound.get(elem);
+                            //         if (sound && !sound.isPlaying) sound.play();
+                            //     } else {
+                            //         let sound = barcodesSound.get(elem);
+                            //     }
+                            // })
+                        }
+                        if (patternStates.length) {
+                            for (let i = 0; i < patternStates.length; i++) {
+                                if (patternStates[i] !== arToolkitContext.arController.patternMarkers[i].inCurrent) {
+                                    patternStates[i] = !patternStates[i];
+                                    let sound = patternsSound.get(patternsID[i]);
+                                    if (patternStates[i]) {
+                                        if (sound && !sound.isPlaying) sound.play();
+                                        console.log('pattern play')
+                                    } else {
+                                        if (sound.nodeName === 'VIDEO') {
+                                            if (!sound.paused) sound.pause()
+                                        }
+                                        if (sound && sound.isPlaying) sound.stop();
+                                        console.log('pattern pause')
+                                    }
+                                }
+                            }
+
+
+
+
+                            // for (let index = 0; index < patternsID.length; index++) {
+                            //     if (arToolkitContext.arController.patternMarkers[index].inCurrent) {
+                            //     } else {
+                            //         let sound = patternsSound.get(patternsID[index]);
+                            //     }
+                            // }
                         }
                     }
                 }
