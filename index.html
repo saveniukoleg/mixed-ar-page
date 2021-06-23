@@ -26,7 +26,7 @@
         // Объявляем глобальные переменные
         var scene, camera, renderer, clock, deltaTime, totalTime;
 
-        var partternIdOffset = 10000000000
+        var patternIdOffset = 10000000000
 
         // Переменные необходимые для работы AR окружения
         var arToolkitSource, arToolkitContext;
@@ -159,7 +159,7 @@
                 // если текущий маркер это паттерн, аналогично создаём AR контроллер под паттерн
                 if (patternBarcode[i] <= -1) {
                     let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, markerRoots[i], {
-                        type: 'pattern', patternUrl: patternNames[i], size: 1 + (i + 1) / partternIdOffset
+                        type: 'pattern', patternUrl: patternNames[i], size: 1 + (i + 1) / patternIdOffset
                     })
                     patternsID.push(patternNames[i]);
                 } else {
@@ -345,7 +345,7 @@
                         for (let i = 0; i < patternStates.length; i++) {
                             if (patternStates[i] !== arToolkitContext.arController.patternMarkers[i].inCurrent) {
                                 patternStates[i] = !patternStates[i];
-                                let patternID = (arToolkitContext.arController.patternMarkers[i].markerWidth - 1) * partternIdOffset - 1;
+                                let patternID = (arToolkitContext.arController.patternMarkers[i].markerWidth - 1) * patternIdOffset - 1;
                                 patternID = Math.round(patternID)
                                 let sound = patternsSound.get(patternID);
                                 if (patternStates[i]) {
