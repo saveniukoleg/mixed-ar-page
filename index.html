@@ -4,23 +4,32 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <title>Mixed AR Page</title>
     <!-- Добавляем необходимые библиотеки -->
-    <!-- Библиотека three.js -->
-    <script src='js/three.js'></script>
-    <script src='js/OBJLoader.js'></script>
-    <script src='js/MTLLoader.js'></script>
-    <!-- Библиотека tween.js -->
+    <script src="js/three.js"></script>
     <script src="js/tween.umd.js"></script>
-    <!-- Добавляем jsartookit -->
-    <script src="jsartoolkit5/artoolkit.min.js"></script>
-    <script src="jsartoolkit5/artoolkit.api.js"></script>
-    <!-- Добавляем threex.artoolkit -->
-    <script src="threex/threex-artoolkitsource.js"></script>
-    <script src="threex/threex-artoolkitcontext.js"></script>
-    <script src="threex/threex-arbasecontrols.js"></script>
-    <script src="threex/threex-armarkercontrols.js"></script>
+    <script src='loaders/GLTFLoader.js'></script>
+    <script src='loaders/MTLLoader.js'></script>
+    <script src='loaders/OBJLoader.js'></script>
+    <!-- Добавляем AR.js -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-nft.js"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #mainCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
 </head>
 
-<body style='margin : 0px; overflow: hidden'>
+<body>
+
+    <canvas id="mainCanvas"></canvas>
 
     <script>
         // Объявляем глобальные переменные
@@ -37,6 +46,8 @@
         // Отдельный массив для хранение всего аудио и видео контента, который будет 
         // запущен по нажатию на экран смартфона
         var audioContent = [];
+
+        var contentPromises = [];
 
         let audioInitialized = false;
         let barcodesSound = new Map();
@@ -57,9 +68,10 @@
             // Добавляем свет на сцену, иначе базовые материалы будут просто чёрными
             // т.к. им будет нечего отражать, обратитесь к документации библиотеки three.js, чтобы
             // прочитать о подробной работе класса Material
-            let ambientLight = new THREE.AmbientLight(0xcccccc, 0.5);
+            let ambientLight = new THREE.AmbientLight();
             scene.add(ambientLight);
 
+            const canvas = document.querySelector('#mainCanvas');
             // Добавляем камеру, которая будет позже переназначена на камеру смартфона
             camera = new THREE.Camera();
             scene.add(camera);
@@ -69,15 +81,12 @@
 
             // Объявляем стандартный рендерер и добавляем его в тег body html документа
             renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
                 antialias: true,
                 alpha: true
             });
-            renderer.setClearColor(new THREE.Color('lightgrey'), 0)
-            renderer.setSize(640, 480);
-            renderer.domElement.style.position = 'absolute'
-            renderer.domElement.style.top = '0px'
-            renderer.domElement.style.left = '0px'
-            document.body.appendChild(renderer.domElement);
+            renderer.setPixelRatio(window.devicePixelRatio)
+            renderer.setSize(window.innerWidth, window.innerHeight)
 
             clock = new THREE.Clock();
             deltaTime = 0;
@@ -87,17 +96,8 @@
                 sourceType: 'webcam',
             });
 
-            // Функция перерендерит AR сцену под текущий размер canvas
-            function onResize() {
-                arToolkitSource.onResize()
-                arToolkitSource.copySizeTo(renderer.domElement)
-                if (arToolkitContext.arController !== null) {
-                    arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)
-                }
-            }
-
             // Вызываем функцию при инициализации AR
-            arToolkitSource.init(function onReady() {
+            arToolkitSource.init(function () {
                 onResize()
             });
 
@@ -109,11 +109,11 @@
             // Инициализируем AR контекст под камеру, паттерны, баркод 3х3
             arToolkitContext = new THREEx.ArToolkitContext({
                 cameraParametersUrl: 'data/camera_para.dat',
-                detectionMode: 'mono_and_matrix',
+                detectionMode: 'color_and_matrix',
+                patternRatio: 0.9,
                 matrixCodeType: "3x3",
                 maxDetectionRate: 60,
-                canvasWidth: 640,
-                canvasHeight: 480
+                imageSmoothingEnabled: true,
             });
 
             // Обновляем матрицу проекции камеры после окончания инициализации
@@ -131,11 +131,11 @@
             // если вместо баркода был добавлен .patt, на его место в массив добавляется -1
             const patternBarcode = [-1, -1, -1, 25];
             // Массив типов контента для каждого маркера, заполняется значиями: изображение, модель, видео
-            const modes = ["video", "image", "image", "image"];
+            const modes = ["video", "image", "image", "model"];
             // Массив файлов моделей, если нет модели будет добавлена пустая строка
-            const modelFiles = ["", "", "", ""];
+            const modelFiles = ["", "", "", "Butterfly"];
             // Массив файлов изображений, если нет изображения будет добавлена пустая строка
-            const imageFiles = ["", "Melitaea_britomartis_sf.1001.jpg", "16.png", "mountain.png"];
+            const imageFiles = ["", "mountain.png", "16.png", ""];
             // Массив файлов видео, если нет видео будет добавлена пустая строка
             const videoFiles = ["sintel.mp4", "", "", ""];
             // Массив файлов аудио, если нет аудио будет добавлена пустая строка
@@ -174,40 +174,81 @@
                         function onProgress(xhr) { console.log((xhr.loaded / xhr.total * 100) + '% loaded'); }
                         function onError(xhr) { console.log('An error happened'); }
 
-                        // Загружаем MTL модель
-                        new THREE.MTLLoader()
-                            .load(`${modelFiles[i]}.mtl`, function (materials) {
-                                materials.preload();
-                                // Загружаем OBJ модель
-                                new THREE.OBJLoader()
-                                    .setMaterials(materials)
-                                    .load(`${modelFiles[i]}.obj`, function (group) {
-                                        let mesh0 = group.children[0];
-                                        mesh0.material.side = THREE.DoubleSide;
-                                        // Уменьшаем модель в 20 раз
-                                        mesh0.scale.set(0.05, 0.05, 0.05);
-                                        // Поворачивает модель на -90 градусов по оси OX
-                                        mesh0.rotation.set(Math.PI / -2, 0, 0);
-                                        // Добавляем модель в контейнер
-                                        markerRoots[i].add(mesh0);
+                        if (i === 2) {
+                            new THREE.GLTFLoader()   // Do box center position test form three.js fundamentals
+                            // .load('./gltf/model3/DamagedHelmet.gltf', function (gltf) {
 
-                                    }, onProgress, onError);
-                            });
+
+                            // gltf.scene.traverse(function (child) {
+
+                            //     if (child.isMesh) {
+
+                            //         child.material = new THREE.MeshBasicMaterial({ color: 'green' });
+
+                            //     }
+
+                            // });
+                            // gltf.scene.traverse(function (child) {
+
+                            //     if (child.isMesh) {
+
+                            //         roughnessMipmapper.generateMipmaps(child.material);
+
+                            //     }
+
+                            // });
+                            //     let obj = gltf.scene;
+                            //     let scaleVar = 1000;
+                            //     gltf.scene.scale.set(scaleVar, scaleVar, scaleVar)
+                            //     console.log(obj)
+                            //     markerRoots[i].add(obj);
+                            //     markerRoots[i].add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.1), new THREE.MeshBasicMaterial({ color: 'blue', transparent: true, opacity: 0.5 })))
+                            // }, onProgress, onError)
+                        } else if (i === 3) {
+                            // Загружаем MTL модель
+                            contentPromises.push(new Promise((resolve) => {
+                                new THREE.MTLLoader()
+                                    .load(`${modelFiles[i]}.mtl`, function (materials) {
+                                        materials.preload();
+                                        // Загружаем OBJ модель
+                                        new THREE.OBJLoader()
+                                            .setMaterials(materials)
+                                            .load(`${modelFiles[i]}.obj`, function (group) {
+                                                let mesh0 = group.children[0];
+                                                mesh0.material.side = THREE.DoubleSide;
+                                                // Уменьшаем модель в 20 раз
+                                                mesh0.scale.set(0.05, 0.05, 0.05);
+                                                // Поворачивает модель на -90 градусов по оси OX
+                                                mesh0.rotation.set(Math.PI / -2, 0, 0);
+                                                // Добавляем модель в контейнер
+                                                markerRoots[i].add(mesh0);
+                                                resolve(modelFiles[i])
+                                            }, onProgress, onError);
+                                    });
+                            }).then((file) => {
+                                console.log(`${file} loaded`)
+                            }))
+                        }
                         break;
                     // Если контент под маркер это изображение
                     case 'image':
                         if (imageFiles[i]) {
-                            // Объявляем плоскость под изображение
-                            let geometry1 = new THREE.PlaneBufferGeometry(1, 1, 4, 4);
-                            // Загружаем изображение
-                            let loader = new THREE.TextureLoader();
-                            let texture = loader.load(`${imageFiles[i]}`, render);
-                            let material1 = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-                            mesh1 = new THREE.Mesh(geometry1, material1);
-                            // Поворачиваем плоскость
-                            mesh1.rotation.x = -Math.PI / 2;
-                            // Добавляем плоскость в контейнер
-                            markerRoots[i].add(mesh1);
+                            contentPromises.push(new Promise((resolve) => {
+                                // Объявляем плоскость под изображение
+                                let geometry1 = new THREE.PlaneBufferGeometry(1, 1, 4, 4);
+                                // Загружаем изображение
+                                let loader = new THREE.TextureLoader();
+                                let texture = loader.load(`${imageFiles[i]}`, render);
+                                let material1 = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+                                let mesh1 = new THREE.Mesh(geometry1, material1);
+                                // Поворачиваем плоскость
+                                mesh1.rotation.x = -Math.PI / 2;
+                                // Добавляем плоскость в контейнер
+                                markerRoots[i].add(mesh1);
+                                resolve(imageFiles[i])
+                            }).then(image => {
+                                console.log(`${image} loaded`)
+                            }))
                         }
                         break;
                     // Если контент под маркер это видео
@@ -235,7 +276,7 @@
                         texture2.magFilter = THREE.LinearFilter;
                         texture2.format = THREE.RGBFormat;
                         let material2 = new THREE.MeshBasicMaterial({ map: texture2 });
-                        mesh2 = new THREE.Mesh(geometry2, material2);
+                        let mesh2 = new THREE.Mesh(geometry2, material2);
                         // Поворачиваем плоскость
                         mesh2.rotation.x = -Math.PI / 2;
                         // Добавляем плоскость в контейнер
@@ -264,30 +305,57 @@
 
                 // Если имеются аудио файлы настраиваем их и добавляем в массив аудио контента
                 if (audioFiles[i]) {
-                    audioLoader.load(`${audioFiles[i]}`, function (buffer) {
-                        // Создаём аудио источник
-                        let sound = new THREE.Audio(listener);
-                        sound.name = `${audioFiles[i]}`;
-                        sound.setBuffer(buffer);
-                        // sound.source.onended = function () { // source undefined
+
+                    contentPromises.push(new Promise((resolve, reject) => {
+                        audioLoader.load(`${audioFiles[i]}`, function (buffer) {
+                            // Создаём аудио источник
+                            let sound = new THREE.Audio(listener);
+                            sound.name = `${audioFiles[i]}`;
+                            sound.setBuffer(buffer);
+                            // Устанавлием аудио на автоповтор в зависимости от значения в массиве
+                            if (repeatOptions[i]) {
+                                sound.setLoop(true);
+                            }
+                            if (patternBarcode[i] === -1) {
+                                patternsSound.set(i, sound);
+                            } else {
+                                barcodesSound.set(patternBarcode[i], sound);
+                            }
+                            resolve(sound)
+                        });
+                    }).then((sound) => {
+                        // Handler to init sound.souce
+                        sound.play()
+                        sound.stop()
+
+                        // sound.source.onended = function () {
                         //     console.log('sound ended');
                         //     this.isPlaying = false; /* sets Three wrapper property correctly */
                         // };
-                        // Устанавлием аудио на автоповтор в зависимости от значения в массиве
-                        if (repeatOptions[i]) {
-                            sound.setLoop(true);
-                        }
-                        if (patternBarcode[i] === -1) {
-                            patternsSound.set(i, sound);
-                        } else {
-                            barcodesSound.set(patternBarcode[i], sound);
-                        }
-                    });
+                        console.log(sound.source)
+                        console.log(`${sound.name} loaded`)
+                    }))
+
                 }
             }
 
+            Promise.all(contentPromises)
+                .then(() => {
+                    console.log('All content loaded (probably)')
+                    audioInitialized = !audioInitialized;
+                });
+
             // Добавляем главный контейнер на сцену
             scene.add(mainContainer);
+        }
+
+        // Функция перерендерит AR сцену под текущий размер canvas
+        function onResize() {
+            arToolkitSource.onResizeElement()
+            arToolkitSource.copyElementSizeTo(renderer.domElement)
+            if (arToolkitContext.arController !== null) {
+                arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+            }
         }
 
         function checkController() {
@@ -319,9 +387,15 @@
             return box1.intersectsBox(box2);
         };
 
+        var resizedOnInit = 0;
+
         // Обновляем AR контент на каждый кадр
         function update() {
             if (arToolkitSource.ready !== false) {
+                if (resizedOnInit < 200) {
+                    resizedOnInit++;
+                    onResize()
+                }
                 arToolkitContext.update(arToolkitSource.domElement);
                 if (audioInitialized) {
                     if (barcodesID.length) {
@@ -344,7 +418,15 @@
                                 let patternID = (arToolkitContext.arController.patternMarkers[index].markerWidth - 1) * patternIdOffset - 1;
                                 patternID = Math.round(patternID)
                                 let sound = patternsSound.get(patternID);
-                                // console.log(sound)
+                                // if (sound.source.onended typeof Function) {
+                                //     console.log(sound.source, "1")
+                                //     sound.source.onended = function () {
+                                //         console.log('sound ended');
+                                //         this.isPlaying = false; /* sets Three wrapper property correctly */
+                                //     };
+                                // } else {
+                                //     console.log(sound.source, "2")
+                                // }
                                 if (sound && !sound.isPlaying && !sound.userData?.ended) sound.play();
                             } else {
                                 let patternID = (arToolkitContext.arController.patternMarkers[index].markerWidth - 1) * patternIdOffset - 1;
@@ -378,16 +460,6 @@
             checkController();
             render();
         }
-
-        // Функция запуска всего аудио контента приложения
-        const playAudioContent = () => {
-            // Убираем ивент с функции, чтобы она не вызвалась при последующих нажатиях
-            window.removeEventListener('touchstart', playAudioContent);
-            audioInitialized = true;
-        };
-        // Вызываем функцию по нажатию на экран
-        window.addEventListener('touchstart', playAudioContent)
-
     </script>
 
 </body>
