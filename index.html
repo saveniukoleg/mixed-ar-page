@@ -139,7 +139,7 @@
             // Массив файлов видео, если нет видео будет добавлена пустая строка
             const videoFiles = ["sintel.mp4", "", "", ""];
             // Массив файлов аудио, если нет аудио будет добавлена пустая строка
-            const audioFiles = ["", "Tuyo.mp3", "1.mp3", "Superlife.mp3"];
+            const audioFiles = ["", "4.mp3", "1.mp3", "3.mp3"];
             // Массив опций повтора аудио и видео контента, по дефолту для всех будет false
             const repeatOptions = ["true", "true", "true", "true"];
 
@@ -324,15 +324,8 @@
                             resolve(sound)
                         });
                     }).then((sound) => {
-                        // Handler to init sound.souce
                         sound.play()
                         sound.stop()
-
-                        // sound.source.onended = function () {
-                        //     console.log('sound ended');
-                        //     this.isPlaying = false; /* sets Three wrapper property correctly */
-                        // };
-                        console.log(sound.source)
                         console.log(`${sound.name} loaded`)
                     }))
 
@@ -341,7 +334,7 @@
 
             Promise.all(contentPromises)
                 .then(() => {
-                    console.log('All content loaded (probably)')
+                    console.log('Most of the content loaded')
                     audioInitialized = !audioInitialized;
                 });
 
@@ -402,13 +395,25 @@
                         barcodesID.forEach((elem, index) => {
                             if (arToolkitContext.arController.barcodeMarkers[elem].inCurrent) {
                                 let sound = barcodesSound.get(elem);
-                                if (sound && !sound.isPlaying) sound.play();
+                                let currentTime = sound.context.currentTime - sound.startTime;
+                                if (currentTime >= sound.buffer.duration && !sound.userData.ended) {
+                                    sound.userData.ended = true;
+                                    sound.stop()
+                                    console.log(sound.name, 'stopped')
+                                }
+                                if (sound && !sound.isPlaying && !sound.userData.ended) {
+                                    sound.play();
+                                }
                             } else {
                                 let sound = barcodesSound.get(elem);
                                 if (sound && sound.nodeName === 'VIDEO') {
                                     if (!sound.paused) sound.pause()
                                 }
-                                if (sound && sound.isPlaying) sound.stop();
+                                if (sound && sound.isPlaying) {
+                                    console.log('tset')
+                                    sound.stop();
+                                    sound.context.currentTime = sound.startTime
+                                }
                             }
                         })
                     }
@@ -418,16 +423,15 @@
                                 let patternID = (arToolkitContext.arController.patternMarkers[index].markerWidth - 1) * patternIdOffset - 1;
                                 patternID = Math.round(patternID)
                                 let sound = patternsSound.get(patternID);
-                                // if (sound.source.onended typeof Function) {
-                                //     console.log(sound.source, "1")
-                                //     sound.source.onended = function () {
-                                //         console.log('sound ended');
-                                //         this.isPlaying = false; /* sets Three wrapper property correctly */
-                                //     };
-                                // } else {
-                                //     console.log(sound.source, "2")
-                                // }
-                                if (sound && !sound.isPlaying && !sound.userData?.ended) sound.play();
+                                let currentTime = sound.context.currentTime - sound.startTime;
+                                if (currentTime >= sound.buffer.duration && !sound.userData.ended) {
+                                    sound.userData.ended = true;
+                                    sound.stop()
+                                    console.log(sound.name, 'stopped')
+                                }
+                                if (sound && !sound.isPlaying && !sound.userData.ended) {
+                                    sound.play();
+                                }
                             } else {
                                 let patternID = (arToolkitContext.arController.patternMarkers[index].markerWidth - 1) * patternIdOffset - 1;
                                 patternID = Math.round(patternID)
@@ -437,6 +441,7 @@
                                 }
                                 if (sound && sound.isPlaying) {
                                     sound.stop();
+                                    sound.context.currentTime = sound.startTime
                                 }
                             }
                         }
